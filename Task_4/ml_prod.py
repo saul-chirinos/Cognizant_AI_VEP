@@ -1,35 +1,76 @@
-# OUTLINE
-
-# 1. Import statements
-# 2. Constants, if needed
-# 3. Define functions for modeling
-# 4. "main" function that runs everything
-
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import SGDRegressor
+from sklearn.model_selection import cross_val_score
 
-# train test split
-# fit on training
-# predict testing
-# functions for returning the cross val score, prediction
+TEST_SIZE = 0.2
+RANDOM_STATE = 33
+K_FOLDS = 5
+SCORER = 'neg_mean_absolute_error'
+CV_EXTRACT = 'test_'
+NEGATIVE_CONVERTER = -1
 
 
 def load_data(file):
-    """Load data from CSV to DataFrame.
+    """Load the CSV file into a Pandas DataFrame and drop unnecessary column.
 
     Args:
-        file (csv): File to be of type csv.
+        file (csv): csv file to load
+
+    Returns:
+        pd.DataFrame: Pandas dataframe object
     """
-    return pd.read_csv(file)
+    df = pd.read_csv(file)
+    df.drop('Unnamed: 0', axis=1, inplace=True, errors='ingore')
+    return df
 
 
-def model_fitting(df: pd.DataFrame=None):
-    """_summary_
+def load_model(file):
+    """Load the model from a pickle file.
 
     Args:
-        df (pd.DataFrame, optional): _description_. Defaults to None.
+        file (pickle): Pickle file containing the model object
+
+    Returns:
+        unpickled: Same type as object stored in file
     """
-    X_train, X_test, y_train, y_test = train_test_split(df, test_size=0.2, random_state=433)
-    pass
+    return pd.read_pickle(file)
+
+
+def split_features_and_target(data: pd.DataFrame=None, target: str='estimated_stock_pct'):
+    """Splits dataframe into features, X, and target variable, y.
+
+    Args:
+        data (pd.DataFrame, optional): Pandas dataframe object. Defaults to None.
+        target (str, optional): Target variable to isolate. Defaults to 'estimated_stock_pct'.
+
+    Returns:
+        X (pd.DataFrame): Pandas dataframe features
+        y (pd.Series): Pandas series target variable
+    """
+    X = data.drop(target, axis=1)
+    y = data[target]
+    return X, y
+
+
+def main(data_file, model_file, error_score='raise'):
+    """Pipeline for loading the data and model, splitting data into training and testing sets, and
+    running K-fold cross validation. Then prints the average cross validation score.
+
+    Args:
+        data_file (csv): csv file to load
+        model_file (pickle): Pickle file containing the model object
+        error_score (str, optional): Value to assign to the score if an error occurs in estimator
+                                     fitting. Defaults to 'raise'.
+    """
+    data = load_data(data_file, model_file)
+    X, y = split_features_and_target(data)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+
+    model = load_model(model_file)
+
+    # Cross validate model fit and predict
+    cross_val = cross_val_score(model, X_train, y_train, cv=K_FOLDS, scoring=SCORER, error_score=error_score)
+
+    # Output average model error score
+    mae = cross_val.get(CV_EXTRACT+SCORER).mean()*NEGATIVE_CONVERTER
+    print(mae)
