@@ -10,30 +10,30 @@ CV_EXTRACT = 'test_'
 NEGATIVE_CONVERTER = -1
 
 
-def load_data(file):
+def load_data(path: str='Data/sales.csv'):
     """Load the CSV file into a Pandas DataFrame and drop unnecessary column.
 
     Args:
-        file (csv): csv file to load
+        path (str): Path to csv file. Defaults to 'Data/sales.csv'.
 
     Returns:
         pd.DataFrame: Pandas dataframe object
     """
-    df = pd.read_csv(file)
+    df = pd.read_csv(path)
     df.drop('Unnamed: 0', axis=1, inplace=True, errors='ingore')
     return df
 
 
-def load_model(file):
+def load_model(path: str='Task_4/final_model.pkl'):
     """Load the model from a pickle file.
 
     Args:
-        file (pickle): Pickle file containing the model object
+        path (str): Path to pickle file containing the model object. Defaults to 'Task_4/final_model.pkl'.
 
     Returns:
         unpickled: Same type as object stored in file
     """
-    return pd.read_pickle(file)
+    return pd.read_pickle(path)
 
 
 def split_features_and_target(data: pd.DataFrame=None, target: str='estimated_stock_pct'):
@@ -52,7 +52,7 @@ def split_features_and_target(data: pd.DataFrame=None, target: str='estimated_st
     return X, y
 
 
-def main(data_file, model_file, error_score='raise'):
+def main(error_score='raise'):
     """Pipeline for loading the data and model, splitting data into training and testing sets, and
     running K-fold cross validation. Then prints the average cross validation score.
 
@@ -62,11 +62,11 @@ def main(data_file, model_file, error_score='raise'):
         error_score (str, optional): Value to assign to the score if an error occurs in estimator
                                      fitting. Defaults to 'raise'.
     """
-    data = load_data(data_file, model_file)
+    data = load_data()
     X, y = split_features_and_target(data)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-    model = load_model(model_file)
+    model = load_model()
 
     # Cross validate model fit and predict
     cross_val = cross_val_score(model, X_train, y_train, cv=K_FOLDS, scoring=SCORER, error_score=error_score)
