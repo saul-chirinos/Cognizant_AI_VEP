@@ -57,8 +57,6 @@ def main(error_score='raise'):
     running K-fold cross validation. Then prints the average cross validation score.
 
     Args:
-        data_file (csv): csv file to load
-        model_file (pickle): Pickle file containing the model object
         error_score (str, optional): Value to assign to the score if an error occurs in estimator
                                      fitting. Defaults to 'raise'.
     """
